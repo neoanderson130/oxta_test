@@ -183,8 +183,7 @@
             pointer-events: none; 
         }
 
-        /* Общие стили для зон сброса */
-        .dropzone {
+       .dropzone {
             position: absolute;
             width: 185px;  
             height: 32px; 
@@ -200,22 +199,30 @@
             text-align: center;
             box-sizing: border-box;
             transition: all 0.2s ease;
+            /* ВАЖНО: текст внутри карточки не должен перехватывать drag-события */
+            pointer-events: none; 
         }
 
+        /* Добавляем pointer-events: auto только для самой зоны, чтобы она реагировала */
+        .image-wrapper .dropzone {
+            pointer-events: auto;
+        }
+
+        /* Ставим !important, чтобы штрих появлялся ПОВЕРХ зеленого или красного фона */
         .dropzone.drag-over {
-            background-color: #e3f2fd;
-            border: 2px dashed #2196f3;
+            background-color: #e3f2fd !important;
+            border: 1px dashed #2196f3 !important;
         }
 
         .dropzone.correct {
             background-color: #e8f5e9;
-            border: 2px solid #4caf50;
+            border: 1px solid #4caf50;
             color: #2e7d32;
         }
 
         .dropzone.incorrect {
             background-color: #ffebee;
-            border: 2px solid #f44336;
+            border: 1px solid #f44336;
             color: #c62828;
         }
 
@@ -235,7 +242,7 @@
 
         .term-box {
             width: 100%;
-            height: 36px; 
+            height: 32px; 
             background-color: transparent; 
             border: none;                  
             box-sizing: border-box;
@@ -263,16 +270,16 @@
         }
 
         .draggable.latin {
-            background-color: #ffffff;
-            border: 2px solid #000000;
+            background-color: #f0f8ff;
+            border: 1px solid #000000;
             color: #d11a1a;
             z-index: 3; 
         }
 
         .draggable.russian {
-            background-color: #fff9db; 
-            border: 2px solid #ff922b;
-            color: #d9480f;
+            background-color: #fffaf0; 
+            border: 1px solid #000000;
+            color: #d11a1a;
             z-index: 2; 
         }
 
