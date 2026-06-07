@@ -624,6 +624,20 @@
 
     resetButton.addEventListener('click', resetGame);
     overlayResetButton.addEventListener('click', resetGame);
+    document.addEventListener('touchstart', function (event) {
+    if (event.touches.length > 1) {
+        event.preventDefault(); // Запрещаем мультитач-зум двумя пальцами
+    }
+}, { passive: false });
+
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function (event) {
+    const now = (new Date()).getTime();
+    if (now - lastTouchEnd <= 300) {
+        event.preventDefault(); // Запрещаем зум при двойном быстром клике
+    }
+    lastTouchEnd = now;
+}, false);
 </script>
 
 </body>
