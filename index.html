@@ -14,6 +14,7 @@
             padding: 0;
             box-sizing: border-box;
             user-select: none;
+			touch-action: none;
         }
 
         /* БОKОВОЕ МЕНЮ СЛЕВА С ПОДМЕНЮ */
@@ -267,6 +268,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
+			-webkit-user-select: none; /* Запрещает выделение текста на iOS */
+            user-select: none;
+            touch-action: none;
         }
 
         .draggable.latin {
@@ -350,7 +354,6 @@
             line-height: 1.5;
         }
     </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/drag-drop-touch/1.0.3/DragDropTouch.min.js"></script>
 </head>
 <body>
 
@@ -487,7 +490,7 @@
         </div>
         
         <div class="image-wrapper">
-            <img src="image_248255.png" alt="Анатомия" class="bg-image">
+            <img src="2.png" alt="Анатомия" class="bg-image">
             
             <div class="dropzone" style="top: 14px; left: 97px;" data-correct-lat="lat-vertebra-prominens" data-correct-rus="rus-vertebra-prominens"></div>
             <div class="dropzone" style="top: 50px; left: 54px;" data-correct-lat="lat-proc-trans-cvii" data-correct-rus="rus-proc-trans-cvii"></div>
@@ -568,6 +571,11 @@
 
 <script>
     // СКРИПТ ДЛЯ ИНТЕРАКТИВНОГО АККОРДЕОН-МЕНЮ
+	document.addEventListener('touchmove', function(e) {
+    if (e.target.classList.contains('draggable')) {
+        // Позволяет перетаскивать, не скролля страницу
+    }
+}, { passive: false });
     const menuTriggers = document.querySelectorAll('.menu-trigger');
     
     menuTriggers.forEach(trigger => {
@@ -778,6 +786,6 @@
     resetButton.addEventListener('click', resetGame);
     overlayResetButton.addEventListener('click', resetGame);
 </script>
-
+<script src="[https://cdnjs.cloudflare.com/ajax/libs/drag-drop-touch/1.0.3/DragDropTouch.min.js](https://cdnjs.cloudflare.com/ajax/libs/drag-drop-touch/1.0.3/DragDropTouch.min.js)"></script>
 </body>
 </html>
