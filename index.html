@@ -396,6 +396,13 @@
     let timerInterval = null;
     let gameStarted = false;
 
+    // ПЕРЕМЕННЫЕ ДЛЯ МОБИЛЬНОЙ ВЕРСИИ
+    let activeDraggedElement = null;
+    let startX = 0;
+    let startY = 0;
+    let scrollInterval = null;
+    let scrollSpeed = 0;
+
     function formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -405,6 +412,7 @@
     timerDisplay.textContent = formatTime(timeLeft);
 
     function startTimer() {
+        if (timerInterval) return;
         timerInterval = setInterval(() => {
             timeLeft--;
             timerDisplay.textContent = formatTime(timeLeft);
@@ -422,14 +430,13 @@
 
     function stopTimer() {
         clearInterval(timerInterval);
+        timerInterval = null;
     }
 
+    // --- 1. КЛАССИЧЕСКИЙ DRAG AND DROP (Для работы на ПК с мышкой) ---
     draggables.forEach(draggable => {
         draggable.addEventListener('dragstart', (e) => {
-            if (!gameStarted) {
-                gameStarted = true;
-                startTimer();
-            }
+            if (!gameStarted) { gameStarted = true; startTimer(); }
             draggable.classList.add('dragging');
             e.dataTransfer.setData('text/plain', draggable.id);
         });
@@ -440,64 +447,170 @@
     });
 
     dropzones.forEach(dropzone => {
-        dropzone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-        });
-
-        dropzone.addEventListener('dragenter', () => {
-            dropzone.classList.add('drag-over');
-        });
-
-        dropzone.addEventListener('dragleave', () => {
-            dropzone.classList.remove('drag-over');
-        });
-
+        dropzone.addEventListener('dragover', (e) => { e.preventDefault(); });
+        dropzone.addEventListener('dragenter', () => { dropzone.classList.add('drag-over'); });
+        dropzone.addEventListener('dragleave', () => { dropzone.classList.remove('drag-over'); });
+        
         dropzone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropzone.classList.remove('drag-over');
-
             if (timeLeft <= 0) return;
 
             const draggedId = e.dataTransfer.getData('text/plain');
             const draggedElement = document.getElementById(draggedId);
-            
-            const correctLat = dropzone.getAttribute('data-correct-lat');
-            const correctRus = dropzone.getAttribute('data-correct-rus');
-
             if (draggedElement) {
-                totalDrags++;
-                counterDisplay.textContent = totalDrags;
-
-                if (draggedId === correctLat || draggedId === correctRus) {
-                    dropzone.textContent = draggedElement.textContent;
-                    dropzone.className = 'dropzone correct';
-                    draggedElement.style.visibility = 'hidden'; 
-                    
-                    correctAnswers++;
-                    
-                    soundSuccess.currentTime = 0;
-                    soundSuccess.play().catch(err => {});
-
-                    if (correctAnswers === 24) {
-                        stopTimer();
-                        setTimeout(() => endGame(true), 600);
-                    }
-                } else {
-                    const oldText = dropzone.textContent;
-                    dropzone.textContent = draggedElement.textContent;
-                    dropzone.className = 'dropzone incorrect';
-                    
-                    soundError.currentTime = 0;
-                    soundError.play().catch(err => {});
-
-                    setTimeout(() => {
-                        dropzone.className = oldText === '' ? 'dropzone' : 'dropzone correct';
-                        dropzone.textContent = oldText;
-                    }, 1200);
-                }
+                handleElementDrop(draggedElement, dropzone);
             }
         });
     });
+
+
+    // --- 2. МОБИЛЬНЫЙ TOUCH DRAG AND DROP (Для смартфонов с автоскроллом экрана) ---
+    draggables.forEach(draggable => {
+        draggable.addEventListener('touchstart', (e) => {
+            if (draggable.getAttribute('draggable') === 'false') return;
+            
+            e.preventDefault(); 
+            if (!gameStarted) { gameStarted = true; startTimer(); }
+
+            activeDraggedElement = draggable;
+            draggable.classList.add('dragging');
+
+            const touch = e.touches[0];
+            const rect = draggable.getBoundingClientRect();
+            
+            startX = touch.clientX - rect.left;
+            startY = touch.clientY - rect.top;
+
+            draggable.style.position = 'fixed';
+            draggable.style.width = rect.width + 'px';
+            draggable.style.height = rect.height + 'px';
+            draggable.style.left = rect.left + 'px';
+            draggable.style.top = rect.top + 'px';
+            draggable.style.zIndex = "9999";
+        }, { passive: false });
+
+        draggable.addEventListener('touchmove', (e) => {
+            if (!activeDraggedElement) return;
+            e.preventDefault(); 
+
+            const touch = e.touches[0];
+            const x = touch.clientX - startX;
+            const y = touch.clientY - startY;
+
+            activeDraggedElement.style.left = x + 'px';
+            activeDraggedElement.style.top = y + 'px';
+
+            // Логика автоматического сдвига экрана при приближении пальца к краю
+            const edgeThreshold = 70; 
+            const maxSpeed = 12;      
+            const screenWidth = window.innerWidth;
+
+            if (touch.clientX < edgeThreshold) {
+                scrollSpeed = -maxSpeed * (1 - touch.clientX / edgeThreshold);
+                startAutoScroll();
+            } 
+            else if (touch.clientX > screenWidth - edgeThreshold) {
+                scrollSpeed = maxSpeed * (1 - (screenWidth - touch.clientX) / edgeThreshold);
+                startAutoScroll();
+            } 
+            else {
+                stopAutoScroll();
+            }
+
+            const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+            const currentDropzone = elementUnderTouch ? elementUnderTouch.closest('.dropzone') : null;
+
+            dropzones.forEach(zone => zone.classList.remove('drag-over'));
+            if (currentDropzone && !currentDropzone.classList.contains('correct')) {
+                currentDropzone.classList.add('drag-over');
+            }
+        }, { passive: false });
+
+        draggable.addEventListener('touchend', (e) => {
+            if (!activeDraggedElement) return;
+            e.preventDefault();
+            
+            stopAutoScroll(); 
+
+            activeDraggedElement.classList.remove('dragging');
+
+            const touch = e.changedTouches[0];
+            const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+            const targetDropzone = elementUnderTouch ? elementUnderTouch.closest('.dropzone') : null;
+
+            dropzones.forEach(zone => zone.classList.remove('drag-over'));
+
+            activeDraggedElement.style.position = 'absolute';
+            activeDraggedElement.style.width = '100%';
+            activeDraggedElement.style.height = '100%';
+            activeDraggedElement.style.left = '0';
+            activeDraggedElement.style.top = '0';
+            activeDraggedElement.style.zIndex = activeDraggedElement.classList.contains('latin') ? "3" : "2";
+
+            if (targetDropzone && timeLeft > 0) {
+                handleElementDrop(activeDraggedElement, targetDropzone);
+            }
+
+            activeDraggedElement = null;
+        }, { passive: false });
+    });
+
+    // Функции для поддержки автоскролла
+    function startAutoScroll() {
+        if (scrollInterval) return;
+        scrollInterval = setInterval(() => {
+            window.scrollBy(scrollSpeed, 0); 
+        }, 16); 
+    }
+
+    function stopAutoScroll() {
+        if (scrollInterval) {
+            clearInterval(scrollInterval);
+            scrollInterval = null;
+        }
+    }
+
+
+    // --- 3. УНИВЕРСАЛЬНАЯ ЛОГИКА ПРОВЕРКИ ОТВЕТА ---
+    function handleElementDrop(draggedElement, dropzone) {
+        if (!draggedElement || dropzone.classList.contains('correct')) return;
+
+        const draggedId = draggedElement.id;
+        const correctLat = dropzone.getAttribute('data-correct-lat');
+        const correctRus = dropzone.getAttribute('data-correct-rus');
+
+        totalDrags++;
+        counterDisplay.textContent = totalDrags;
+
+        if (draggedId === correctLat || draggedId === correctRus) {
+            dropzone.textContent = draggedElement.textContent;
+            dropzone.className = 'dropzone correct';
+            draggedElement.style.visibility = 'hidden'; 
+            
+            correctAnswers++;
+            
+            soundSuccess.currentTime = 0;
+            soundSuccess.play().catch(err => {});
+
+            if (correctAnswers === 24) {
+                stopTimer();
+                setTimeout(() => endGame(true), 600);
+            }
+        } else {
+            const oldText = dropzone.textContent;
+            dropzone.textContent = draggedElement.textContent;
+            dropzone.className = 'dropzone incorrect';
+            
+            soundError.currentTime = 0;
+            soundError.play().catch(err => {});
+
+            setTimeout(() => {
+                dropzone.className = oldText === '' ? 'dropzone' : 'dropzone correct';
+                dropzone.textContent = oldText;
+            }, 1200);
+        }
+    }
 
     function endGame(isWin) {
         let grade = 2;
@@ -507,19 +620,10 @@
             resultMessage.textContent = "Tabriklaymiz! Topshiriqni bajardingiz.";
             resultMessage.style.color = "#2e7d32";
             
-            if (totalDrags >= 24 && totalDrags <= 28) {
-                grade = 5;
-                gradeClass = 'grade-5';
-            } else if (totalDrags >= 29 && totalDrags <= 32) {
-                grade = 4;
-                gradeClass = 'grade-4';
-            } else if (totalDrags >= 33 && totalDrags <= 40) {
-                grade = 3;
-                gradeClass = 'grade-3';
-            } else {
-                grade = 2;
-                gradeClass = 'grade-2';
-            }
+            if (totalDrags >= 24 && totalDrags <= 28) { grade = 5; gradeClass = 'grade-5'; }
+            else if (totalDrags >= 29 && totalDrags <= 32) { grade = 4; gradeClass = 'grade-4'; }
+            else if (totalDrags >= 33 && totalDrags <= 40) { grade = 3; gradeClass = 'grade-3'; }
+            else { grade = 2; gradeClass = 'grade-2'; }
         } else {
             resultMessage.textContent = "Vaqt tugadi! Ulgurolmadingiz.";
             resultMessage.style.color = "#c62828";
@@ -560,20 +664,18 @@
 
     resetButton.addEventListener('click', resetGame);
     overlayResetButton.addEventListener('click', resetGame);
-document.addEventListener('touchstart', function (event) {
-    if (event.touches.length > 1) {
-        event.preventDefault(); // Запрещаем мультитач-зум двумя пальцами
-    }
-}, { passive: false });
 
-let lastTouchEnd = 0;
-document.addEventListener('touchend', function (event) {
-    const now = (new Date()).getTime();
-    if (now - lastTouchEnd <= 300) {
-        event.preventDefault(); // Запрещаем зум при двойном быстром клике
-    }
-    lastTouchEnd = now;
-}, false);
+    // Дополнительная защита от системного масштабирования iOS
+    document.addEventListener('touchstart', function (event) {
+        if (event.touches.length > 1) event.preventDefault();
+    }, { passive: false });
+
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) event.preventDefault();
+        lastTouchEnd = now;
+    }, false);
 </script>
 
 </body>
