@@ -349,13 +349,15 @@
             text-align: center;
             line-height: 1.5;
         }
-        .draggable.dragging {
-		    opacity: 1 !important;
-            background-color: inherit !important;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2) !important;
-            border: 1px solid #000 !important;
-            cursor: grabbing !important;
-        }
+       .draggable.dragging {
+    opacity: 1 !important;
+    background-color: transparent !important; /* Убираем черный фон */
+    background: inherit !important;           /* Наследуем исходный фон элемента */
+    border: 1px solid #000 !important;        /* Фиксируем границы */
+    box-shadow: none !important;              /* Убираем лишние тени */
+    filter: none !important;                  /* Отключаем фильтры */
+    -webkit-appearance: none !important;      /* Отключаем системный вид iOS */
+}
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/drag-drop-touch/1.0.3/DragDropTouch.min.js"></script>
 </head>
