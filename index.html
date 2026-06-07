@@ -1,162 +1,18 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes", charset="UTF-8">
-    <title>Anatomik trenajor</title>
+    <meta charset="UTF-8">
+    <title>Анатомический тренажер: Спина (Двойной тест)</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f2f5;
             display: flex;
-            flex-direction: row; 
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-        }
-
-        /* БОKОВОЕ МЕНЮ СЛЕВА С ПОДМЕНЮ */
-        .sidebar-menu {
-            width: 280px; /* Немного расширили для вложенных списков */
-            background-color: #1e293b; 
-            min-height: 100vh;
-            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
-            position: fixed; 
-            top: 0;
-            left: 0;
-            display: flex;
-            flex-direction: column;
-            padding-top: 20px;
-            box-sizing: border-box;
-            z-index: 100;
-            overflow-y: auto; /* Чтобы меню можно было прокрутить, если пунктов много */
-        }
-
-        .sidebar-logo {
-            color: #ffffff;
-            font-size: 16px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding: 10px 20px 25px 20px;
-            border-bottom: 1px solid #334155;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .sidebar-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Главная кнопка раздела */
-        .menu-trigger {
-            display: block;
-            padding: 14px 20px;
-            color: #cbd5e1;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: bold;
-            transition: all 0.2s ease;
-            border-left: 4px solid transparent;
-            cursor: pointer;
-        }
-
-        .menu-trigger:hover, .sidebar-item.active .menu-trigger {
-            color: #ffffff;
-            background-color: #334155;
-            border-left-color: #38bdf8;
-        }
-
-        /* Контейнер подменю (скрыт по умолчанию) */
-        .submenu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            background-color: #0f172a; /* Более темный фон для контраста */
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out; /* Плавное открытие */
-        }
-
-        /* Открытое состояние подменю */
-        .sidebar-item.open .submenu {
-            max-height: 250px; /* Достаточно для 5 пунктов */
-        }
-
-        /* Элементы подменю */
-        .submenu-item a {
-            display: block;
-            padding: 10px 20px 10px 35px; /* Сдвиг вправо */
-            color: #94a3b8;
-            text-decoration: none;
-            font-size: 12px;
-            transition: all 0.2s ease;
-        }
-
-        .submenu-item a:hover {
-            color: #38bdf8;
-            background-color: #1e293b;
-        }
-
-        /* ОСНОВНОЙ КОНТЕНТ СТРАНИЦЫ */
-        .main-content {
-            margin-left: 280px; 
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            padding: 30px;
-            box-sizing: border-box;
-        }
-
-        /* Стиль для верхнего поля темы */
-        .game-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 1px;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* Информационная панель */
-        .info-panel {
-            background-color: #f8f9fa;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            padding: 12px 20px;
-            margin-bottom: 1px;
-            width: 715px; 
-            box-sizing: border-box;
-            display: flex;
-            justify-content: space-between; 
             align-items: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
-        .info-stats {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            font-size: 14px;
-            font-weight: bold;
-            text-align: left;
-        }
-
-        .rating-info {
-            font-size: 12px;
-            color: #555;
-            border-left: 2px dashed #ccc;
-            padding-left: 15px;
-            text-align: left;
-            line-height: 1.4;
+            min-height: 100vh;
+            margin: 0;
+            user-select: none;
         }
 
         .game-container {
@@ -183,7 +39,8 @@
             pointer-events: none; 
         }
 
-       .dropzone {
+        /* Общие стили для зон сброса (серые плашки слева) */
+        .dropzone {
             position: absolute;
             width: 185px;  
             height: 32px; 
@@ -199,34 +56,29 @@
             text-align: center;
             box-sizing: border-box;
             transition: all 0.2s ease;
-            /* ВАЖНО: текст внутри карточки не должен перехватывать drag-события */
-            pointer-events: none; 
         }
 
-        /* Добавляем pointer-events: auto только для самой зоны, чтобы она реагировала */
-        .image-wrapper .dropzone {
-            pointer-events: auto;
-        }
-
-        /* Ставим !important, чтобы штрих появлялся ПОВЕРХ зеленого или красного фона */
+        /* Состояние, когда карточку проносят над зоной */
         .dropzone.drag-over {
-            background-color: #e3f2fd !important;
-            border: 1px dashed #2196f3 !important;
+            background-color: #e3f2fd;
+            border: 2px dashed #2196f3;
         }
 
+        /* Правильный ответ */
         .dropzone.correct {
             background-color: #e8f5e9;
-            border: 1px solid #4caf50;
+            border: 2px solid #4caf50;
             color: #2e7d32;
         }
 
+        /* Неправильный ответ */
         .dropzone.incorrect {
             background-color: #ffebee;
-            border: 1px solid #f44336;
+            border: 2px solid #f44336;
             color: #c62828;
         }
 
-        /* Правая колонка */
+        /* Правая колонка с терминами и кнопкой */
         .right-side {
             display: flex;
             flex-direction: column;
@@ -240,15 +92,17 @@
             gap: 8px;
         }
 
+        /* Третий слой полностью прозрачный */
         .term-box {
             width: 100%;
-            height: 32px; 
+            height: 36px; 
             background-color: transparent; 
             border: none;                  
             box-sizing: border-box;
             position: relative;
         }
 
+        /* Общие стили для всех перетаскиваемых плашек */
         .draggable {
             position: absolute;
             top: 0; 
@@ -269,17 +123,19 @@
             justify-content: center;
         }
 
+        /* Латинские карточки (верхний слой) */
         .draggable.latin {
-            background-color: #f0f8ff;
-            border: 1px solid #000000;
+            background-color: #ffffff;
+            border: 2px solid #000000;
             color: #d11a1a;
             z-index: 3; 
         }
 
+        /* Русские карточки (нижний слой) */
         .draggable.russian {
-            background-color: #fffaf0; 
-            border: 1px solid #000000;
-            color: #d11a1a;
+            background-color: #fff9db; 
+            border: 2px solid #ff922b;
+            color: #d9480f;
             z-index: 2; 
         }
 
@@ -290,16 +146,20 @@
         .draggable.dragging {
             opacity: 0.4;
         }
-        
-        .timer-warning {
-            color: #f44336;
-            animation: blink 1s infinite;
+
+        /* Информационная панель со счетчиком */
+        .info-panel {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
         }
 
-        @keyframes blink {
-            50% { opacity: 0.5; }
-        }
-
+        /* Стили для кнопки сброса */
         .reset-btn {
             margin-top: 10px;
             padding: 10px;
@@ -318,6 +178,7 @@
             background-color: #1e88e5;
         }
 
+        /* Окно с итоговым результатом */
         .result-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -330,6 +191,11 @@
             z-index: 10;
         }
 
+        .result-overlay h2 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
         .grade-box {
             font-size: 64px;
             font-weight: bold;
@@ -340,264 +206,109 @@
         .grade-4 { color: #8bc34a; }
         .grade-3 { color: #ff9800; }
         .grade-2 { color: #f44336; }
-
-        .game-footer {
-            font-size: 13px;
-            font-style: italic;
-            color: #666;
-            margin-top: 5px;
-            text-align: center;
-            line-height: 1.5;
-        }
     </style>
 </head>
 <body>
 
-<!-- БОKОВОЕ МЕНЮ СЛЕВА (РАЗВОРАЧИВАЮЩЕЕСЯ) -->
-<aside class="sidebar-menu">
-    <div class="sidebar-logo">Klinik anatomiyadan trenajor</div>
-    <ul class="sidebar-list">
+<audio id="sound-success" src="success.mp3" preload="auto"></audio>
+<audio id="sound-error" src="error.mp3" preload="auto"></audio>
+
+<div class="game-container">
+    
+    <div class="result-overlay" id="result-screen">
+        <h2>Тест завершен!</h2>
+        <div id="result-stats">Перетаскиваний: 0</div>
+        <div class="grade-box" id="grade-display">5</div>
+        <button class="reset-btn" id="overlay-reset-button" style="width: 150px;">Ещё раз</button>
+    </div>
+    
+    <div class="image-wrapper">
+        <img src="image_248255.png" alt="Анатомия" class="bg-image">
         
-        <!-- Раздел 1 -->
-        <li class="sidebar-item active open">
-            <div class="menu-trigger">1. Spinal soha</div>
-            <ul class="submenu">
-                <li class="submenu-item"><a href="admin.html">1.1. Orqa miya anatomiyasi</a></li>
-                <li class="submenu-item"><a href="admin.html">1.2. Umurtqa pog'onasi</a></li>
-                <li class="submenu-item"><a href="admin.html">1.3. Spinal nervlar</a></li>
-                <li class="submenu-item"><a href="#admin.html">1.4. Muskullar tizimi</a></li>
-                <li class="submenu-item"><a href="#admin.html">1.5. Topografik chizmalar</a></li>
-            </ul>
-        </li>
-
-        <!-- Раздел 2 -->
-        <li class="sidebar-item">
-            <div class="menu-trigger">2. Bosh sohasi</div>
-            <ul class="submenu">
-                <li class="submenu-item"><a href="#2-1">2.1. Kalla suyaklari</a></li>
-                <li class="submenu-item"><a href="#2-2">2.2. Yuz muskullari</a></li>
-                <li class="submenu-item"><a href="#2-3">2.3. Bosh miya tuzilishi</a></li>
-                <li class="submenu-item"><a href="#2-4">2.4. Qon tomirlari</a></li>
-                <li class="submenu-item"><a href="#2-5">2.5. Nerv sonlari</a></li>
-            </ul>
-        </li>
-
-        <!-- Раздел 3 -->
-        <li class="sidebar-item">
-            <div class="menu-trigger">3. Bo'yin sohasi</div>
-            <ul class="submenu">
-                <li class="submenu-item"><a href="#3-1">3.1. Bo'yin umurtqalari</a></li>
-                <li class="submenu-item"><a href="#3-2">3.2. Fasiyalar va bo'shliqlar</a></li>
-                <li class="submenu-item"><a href="#3-3">3.3. Qalqonsimon bez</a></li>
-                <li class="submenu-item"><a href="#3-4">3.4. Bo'yin arteriyalari</a></li>
-                <li class="submenu-item"><a href="#3-5">3.5. Limfa tugunlari</a></li>
-            </ul>
-        </li>
-
-        <!-- Раздел 4 -->
-        <li class="sidebar-item">
-            <div class="menu-trigger">4. Ko'krak qafasi</div>
-            <ul class="submenu">
-                <li class="submenu-item"><a href="#4-1">4.1. Qovurg'alar va to'sh</a></li>
-                <li class="submenu-item"><a href="#4-2">4.2. O'pka anatomiyasi</a></li>
-                <li class="submenu-item"><a href="#4-3">4.3. Yurak va perikard</a></li>
-                <li class="submenu-item"><a href="#4-4">4.4. Ko'ks oralig'i (Mediastinum)</a></li>
-                <li class="submenu-item"><a href="#4-5">4.5. Diaphragma tuzilishi</a></li>
-            </ul>
-        </li>
-
-        <!-- Раздел 5 -->
-        <li class="sidebar-item">
-            <div class="menu-trigger">5. Qorin bo'shlig'i</div>
-            <ul class="submenu">
-                <li class="submenu-item"><a href="#5-1">5.1. Oshqozon va ichaklar</a></li>
-                <li class="submenu-item"><a href="#5-2">5.2. Jigar va o't pufagi</a></li>
-                <li class="submenu-item"><a href="#5-3">5.3. Oshqozon osti bezi</a></li>
-                <li class="submenu-item"><a href="#5-4">5.4. Qorin devori muskullari</a></li>
-                <li class="submenu-item"><a href="#5-5">5.5. Qorin aortasi</a></li>
-            </ul>
-        </li>
-
-        <!-- Раздел 6 -->
-        <li class="sidebar-item">
-            <div class="menu-trigger">6. Chanoq sohasi</div>
-            <ul class="submenu">
-                <li class="submenu-item"><a href="#6-1">6.1. Chanoq suyaklari</a></li>
-                <li class="submenu-item"><a href="#6-2">6.2. Siydik-tanosil tizimi</a></li>
-                <li class="submenu-item"><a href="#6-3">6.3. To'g'ri ichak anatomiyasi</a></li>
-                <li class="submenu-item"><a href="#6-4">6.4. Chanoq tubi muskullari</a></li>
-                <li class="submenu-item"><a href="#6-5">6.5. Ichki yonbosh tomirlar</a></li>
-            </ul>
-        </li>
-
-        <!-- Раздел 7 -->
-        <li class="sidebar-item">
-            <div class="menu-trigger">7. Qo'l anatomiyasi</div>
-            <ul class="submenu">
-                <li class="submenu-item"><a href="#7-1">7.1. Yelka kamari suyaklari</a></li>
-                <li class="submenu-item"><a href="#7-2">7.2. Erkin qo'l bo'g'imlari</a></li>
-                <li class="submenu-item"><a href="#7-3">7.3. Qo'l muskullari</a></li>
-                <li class="submenu-item"><a href="#7-4">7.4. Yelka chigali (Plexus)</a></li>
-                <li class="submenu-item"><a href="#7-5">7.5. Qo'l kafti anatomiyasi</a></li>
-            </ul>
-        </li>
-
-        <!-- Раздел 8 -->
-        <li class="sidebar-item">
-            <div class="menu-trigger">8. Oyoq anatomiyasi</div>
-            <ul class="submenu">
-                <li class="submenu-item"><a href="#8-1">8.1. Son va boldir suyaklari</a></li>
-                <li class="submenu-item"><a href="#8-2">8.2. Tizza bo'g'imi tuzilishi</a></li>
-                <li class="submenu-item"><a href="#8-3">8.3. Oyoq muskul guruhlari</a></li>
-                <li class="submenu-item"><a href="#8-4">8.4. Son va tizza arteriyalari</a></li>
-                <li class="submenu-item"><a href="#8-5">8.5. Oyoq panjasi suyaklari</a></li>
-            </ul>
-        </li>
-    </ul>
-</aside>
-
-<!-- ОСНОВНАЯ ОБЛАСТЬ (СПРАВА) -->
-<main class="main-content">
-
-    <div class="game-title">Spinal soha tashqi mo'ljallari</div>
-
-    <!-- ИНФОРМАЦИОННАЯ ПАНЕЛЬ -->
-    <div class="info-panel">
-        <div class="info-stats">
-            <div>Harakatlar soni: <span id="counter-display">0</span></div>
-            <div id="timer-container">Qolgan vaqt: <span id="timer-display">03:00</span></div>
-        </div>
-        <div class="rating-info">
-            <strong>Baholash mezonlari:</strong><br>
-            • 24-28 harakatda — 5 baho &nbsp;&nbsp; • 29-32 harakatda — 4 baho &nbsp;&nbsp; • 33-40 harakatda — 3 baho
-        </div>
+        <div class="dropzone" style="top: 14px; left: 97px;" data-correct-lat="lat-vertebra-prominens" data-correct-rus="rus-vertebra-prominens"></div>
+        <div class="dropzone" style="top: 50px; left: 54px;" data-correct-lat="lat-proc-trans-cvii" data-correct-rus="rus-proc-trans-cvii"></div>
+        <div class="dropzone" style="top: 89px; left: 26px;" data-correct-lat="lat-proc-spin-tiii" data-correct-rus="rus-proc-spin-tiii"></div>
+        <div class="dropzone" style="top: 127px; left: 26px;" data-correct-lat="lat-spina-scapulae" data-correct-rus="rus-spina-scapulae"></div>
+        <div class="dropzone" style="top: 164px; left: 26px;" data-correct-lat="lat-proc-spin-tvii" data-correct-rus="rus-proc-spin-tvii"></div>
+        <div class="dropzone" style="top: 202px; left: 26px;" data-correct-lat="lat-angulus-inf-scap" data-correct-rus="rus-angulus-inf-scap"></div>
+        <div class="dropzone" style="top: 248px; left: 26px;" data-correct-lat="lat-proc-spin-txii-target" data-correct-rus="rus-proc-spin-txii-target"></div>
+        <div class="dropzone" style="top: 285px; left: 26px;" data-correct-lat="lat-costae-xii" data-correct-rus="rus-costae-xii"></div>
+        <div class="dropzone" style="top: 320px; left: 26px;" data-correct-lat="lat-proc-spin-liv" data-correct-rus="rus-proc-spin-liv"></div>
+        <div class="dropzone" style="top: 355px; left: 26px;" data-correct-lat="lat-crista-iliaca" data-correct-rus="rus-crista-iliaca"></div>
+        <div class="dropzone" style="top: 395px; left: 26px;" data-correct-lat="lat-spina-iliaca-post" data-correct-rus="rus-spina-iliaca-post"></div>
+        <div class="dropzone" style="top: 444px; left: 26px;" data-correct-lat="lat-proc-spin-sii" data-correct-rus="rus-proc-spin-sii"></div>
     </div>
 
-    <audio id="sound-success" src="success.mp3" preload="auto"></audio>
-    <audio id="sound-error" src="error.mp3" preload="auto"></audio>
+    <div class="right-side">
+        <div>
+            <div class="info-panel">
+                Перетаскиваний: <span id="counter-display">0</span>
+            </div>
 
-    <div class="game-container">
-        
-        <div class="result-overlay" id="result-screen">
-            <div id="result-message" style="font-size: 20px; font-weight: bold; margin-bottom: 10px;"></div>
-            <div id="result-stats">Harakatlar soni: 0</div>
-            <div class="grade-box" id="grade-display">5</div>
-            <button class="reset-btn" id="overlay-reset-button" style="width: 150px;">Takrorlash</button>
-        </div>
-        
-        <div class="image-wrapper">
-            <img src="image_248255.png" alt="Анатомия" class="bg-image">
-            
-            <div class="dropzone" style="top: 14px; left: 97px;" data-correct-lat="lat-vertebra-prominens" data-correct-rus="rus-vertebra-prominens"></div>
-            <div class="dropzone" style="top: 50px; left: 54px;" data-correct-lat="lat-proc-trans-cvii" data-correct-rus="rus-proc-trans-cvii"></div>
-            <div class="dropzone" style="top: 89px; left: 26px;" data-correct-lat="lat-proc-spin-tiii" data-correct-rus="rus-proc-spin-tiii"></div>
-            <div class="dropzone" style="top: 127px; left: 26px;" data-correct-lat="lat-spina-scapulae" data-correct-rus="rus-spina-scapulae"></div>
-            <div class="dropzone" style="top: 164px; left: 26px;" data-correct-lat="lat-proc-spin-tvii" data-correct-rus="rus-proc-spin-tvii"></div>
-            <div class="dropzone" style="top: 202px; left: 26px;" data-correct-lat="lat-angulus-inf-scap" data-correct-rus="rus-angulus-inf-scap"></div>
-            <div class="dropzone" style="top: 248px; left: 26px;" data-correct-lat="lat-proc-spin-txii-target" data-correct-rus="rus-proc-spin-txii-target"></div>
-            <div class="dropzone" style="top: 285px; left: 26px;" data-correct-lat="lat-costae-xii" data-correct-rus="rus-costae-xii"></div>
-            <div class="dropzone" style="top: 320px; left: 26px;" data-correct-lat="lat-proc-spin-liv" data-correct-rus="rus-proc-spin-liv"></div>
-            <div class="dropzone" style="top: 355px; left: 26px;" data-correct-lat="lat-crista-iliaca" data-correct-rus="rus-crista-iliaca"></div>
-            <div class="dropzone" style="top: 395px; left: 26px;" data-correct-lat="lat-spina-iliaca-post" data-correct-rus="rus-spina-iliaca-post"></div>
-            <div class="dropzone" style="top: 444px; left: 26px;" data-correct-lat="lat-proc-spin-sii" data-correct-rus="rus-proc-spin-sii"></div>
-        </div>
-
-        <div class="right-side">
-             <div class="terms-column" id="terms-bank">
+            <div class="terms-column" id="terms-bank">
                 <div class="term-box">
-                    <div class="draggable russian" draggable="true" id="rus-proc-spin-tiii">T3 o'tkir qirrali o'simtasi</div>
+                    <div class="draggable russian" draggable="true" id="rus-vertebra-prominens">Выступающий позвонок</div>
                     <div class="draggable latin" draggable="true" id="lat-costae-xii">costae XII</div>
                 </div>
                 <div class="term-box">
-                    <div class="draggable russian" draggable="true" id="rus-crista-iliaca">yonbosh suyagi qirrasi</div>
+                    <div class="draggable russian" draggable="true" id="rus-proc-spin-tvii">Остистый отросток TVII</div>
                     <div class="draggable latin" draggable="true" id="lat-spina-scapulae">spina scapulae</div>
                 </div>
                 <div class="term-box">
-                    <div class="draggable russian" draggable="true" id="rus-proc-spin-sii">S2 o'tkir qirrali o'simtasi</div>
+                    <div class="draggable russian" draggable="true" id="rus-spina-scapulae">Ость лопатки</div>
                     <div class="draggable latin" draggable="true" id="lat-proc-spin-tvii">processus spinosus TVII</div>
                 </div>
                 <div class="term-box">
-                    <div class="draggable russian" draggable="true" id="rus-proc-spin-txii-target">T12 o'tkir qirrali o'simtasi</div>
+                    <div class="draggable russian" draggable="true" id="rus-proc-spin-txii-target">Остистый отросток TXII</div>
                     <div class="draggable latin" draggable="true" id="lat-proc-spin-liv">processus spinosus LIV</div>
                 </div>
                 <div class="term-box">
-                    <div class="draggable russian" draggable="true" id="rus-angulus-inf-scap">kurak suyagining pastki burchagi</div>
+                    <div class="draggable russian" draggable="true" id="rus-costae-xii">XII ребро</div>
                     <div class="draggable latin" draggable="true" id="lat-proc-spin-sii">processus spinosus SII</div>
                 </div>
                 <div class="term-box">
-                    <div class="draggable russian" draggable="true" id="rus-proc-spin-liv">L4 o'tkir qirrali o'simtasi</div>
+                    <div class="draggable russian" draggable="true" id="rus-proc-spin-liv">Остистый отросток LIV</div>
                     <div class="draggable latin" draggable="true" id="lat-vertebra-prominens">vertebra prominens</div>
                 </div>
                 <div class="term-box">
-                    <div class="draggable russian" draggable="true" id="rus-spina-iliaca-post">yonbosh suyagining orqa yuqori o'simtasi</div>
+                    <div class="draggable russian" draggable="true" id="rus-angulus-inf-scap">Нижний угол лопатки</div>
                     <div class="draggable latin" draggable="true" id="lat-proc-spin-txii-target">processus spinosus TXII</div>
                 </div>
                 <div class="term-box">
-                    <div class="draggable russian" draggable="true" id="rus-proc-spin-tvii">T7 o'tkir qirrali o'simtasi</div>
+                    <div class="draggable russian" draggable="true" id="rus-proc-trans-cvii">Поперечный отросток CVII</div>
                     <div class="draggable latin" draggable="true" id="lat-angulus-inf-scap">angulus inferior scapulae</div>
                 </div>
                 <div class="term-box">
-                    <div class="draggable russian" draggable="true" id="rus-vertebra-prominens">bo'rtib chiqib turuvchi umurtqa</div>
+                    <div class="draggable russian" draggable="true" id="rus-proc-spin-tiii">Остистый отросток TIII</div>
                     <div class="draggable latin" draggable="true" id="lat-proc-trans-cvii">processus transversus CVII</div>
                 </div>
                 <div class="term-box">
-                    <div class="draggable russian" draggable="true" id="rus-spina-scapulae">kurak suyagining o'tkir qirrali o'simtasi</div>
+                    <div class="draggable russian" draggable="true" id="rus-crista-iliaca">Подвздошный гребень</div>
                     <div class="draggable latin" draggable="true" id="lat-proc-spin-tiii">processus spinosus TIII</div>
                 </div>
                 <div class="term-box">
-                    <div class="draggable russian" draggable="true" id="rus-costae-xii">12-qovurg'a</div>
+                    <div class="draggable russian" draggable="true" id="rus-spina-iliaca-post">Задняя верхняя подвздошная ость</div>
                     <div class="draggable latin" draggable="true" id="lat-crista-iliaca">crista iliaca</div>
                 </div>
                 <div class="term-box">
-                    <div class="draggable russian" draggable="true" id="rus-proc-trans-cvii">C7 ko'ndalang o'simtasi</div>
+                    <div class="draggable russian" draggable="true" id="rus-proc-spin-sii">Остистый отросток SII</div>
                     <div class="draggable latin" draggable="true" id="lat-spina-iliaca-post">spina iliaca posterior sup.</div>
                 </div>
             </div>
-            
-            <button class="reset-btn" id="reset-button">Yangidan boshlash</button>
         </div>
-
+        
+        <button class="reset-btn" id="reset-button">Начать заново</button>
     </div>
 
-    <div class="game-footer">
-        © Loyiha muallifi: Shamuratov Murodjon Saparbayevich (Urganch RANCH texnologiya universiteti)
-    </div>
-
-</main>
+</div>
 
 <script>
-    // СКРИПТ ДЛЯ ИНТЕРАКТИВНОГО АККОРДЕОН-МЕНЮ
-    const menuTriggers = document.querySelectorAll('.menu-trigger');
-    
-    menuTriggers.forEach(trigger => {
-        trigger.addEventListener('click', () => {
-            const currentItem = trigger.parentElement;
-            const isOpen = currentItem.classList.contains('open');
-            
-            // Закрываем все открытые разделы меню перед открытием нового
-            document.querySelectorAll('.sidebar-item').forEach(item => {
-                item.classList.remove('open');
-                item.classList.remove('active');
-            });
-            
-            // Если текущий раздел не был открыт, открываем его
-            if (!isOpen) {
-                currentItem.classList.add('open');
-                currentItem.classList.add('active');
-            }
-        });
-    });
-
-    // ИГРОВАЯ ЛОГИКА ТРЕНАЖЕРА (DRAG AND DROP)
     const draggables = document.querySelectorAll('.draggable');
     const dropzones = document.querySelectorAll('.dropzone');
     const resetButton = document.getElementById('reset-button');
     const overlayResetButton = document.getElementById('overlay-reset-button');
     const counterDisplay = document.getElementById('counter-display');
-    const timerDisplay = document.getElementById('timer-display');
-    const timerContainer = document.getElementById('timer-container');
     const resultScreen = document.getElementById('result-screen');
-    const resultMessage = document.getElementById('result-message');
     const resultStats = document.getElementById('result-stats');
     const gradeDisplay = document.getElementById('grade-display');
     
@@ -606,46 +317,9 @@
 
     let totalDrags = 0;      
     let correctAnswers = 0; 
-    
-    const timeLimit = 180; 
-    let timeLeft = timeLimit;
-    let timerInterval = null;
-    let gameStarted = false;
-
-    function formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-
-    timerDisplay.textContent = formatTime(timeLeft);
-
-    function startTimer() {
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            timerDisplay.textContent = formatTime(timeLeft);
-
-            if (timeLeft <= 15) {
-                timerContainer.classList.add('timer-warning');
-            }
-
-            if (timeLeft <= 0) {
-                stopTimer();
-                endGame(false);
-            }
-        }, 1000);
-    }
-
-    function stopTimer() {
-        clearInterval(timerInterval);
-    }
 
     draggables.forEach(draggable => {
         draggable.addEventListener('dragstart', (e) => {
-            if (!gameStarted) {
-                gameStarted = true;
-                startTimer();
-            }
             draggable.classList.add('dragging');
             e.dataTransfer.setData('text/plain', draggable.id);
         });
@@ -661,6 +335,7 @@
         });
 
         dropzone.addEventListener('dragenter', () => {
+            // Больше не проверяем класс complete, так как текст перезаписывается
             dropzone.classList.add('drag-over');
         });
 
@@ -671,8 +346,6 @@
         dropzone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropzone.classList.remove('drag-over');
-
-            if (timeLeft <= 0) return;
 
             const draggedId = e.dataTransfer.getData('text/plain');
             const draggedElement = document.getElementById(draggedId);
@@ -685,7 +358,10 @@
                 counterDisplay.textContent = totalDrags;
 
                 if (draggedId === correctLat || draggedId === correctRus) {
+                    
+                    // ТЕПЕРЬ ТЕКСТ ВСЕГДА ПЕРЕЗАПИСЫВАЕТСЯ НА ПОСЛЕДНИЙ ПЕРЕТАЩЕННЫЙ
                     dropzone.textContent = draggedElement.textContent;
+
                     dropzone.className = 'dropzone correct';
                     draggedElement.style.visibility = 'hidden'; 
                     
@@ -695,8 +371,7 @@
                     soundSuccess.play().catch(err => {});
 
                     if (correctAnswers === 24) {
-                        stopTimer();
-                        setTimeout(() => endGame(true), 600);
+                        setTimeout(showFinalGrade, 600); 
                     }
                 } else {
                     const oldText = dropzone.textContent;
@@ -707,6 +382,7 @@
                     soundError.play().catch(err => {});
 
                     setTimeout(() => {
+                        // Возвращаем старый текст (или оставляем пустой плашку)
                         dropzone.className = oldText === '' ? 'dropzone' : 'dropzone correct';
                         dropzone.textContent = oldText;
                     }, 1200);
@@ -715,52 +391,34 @@
         });
     });
 
-    function endGame(isWin) {
+    function showFinalGrade() {
         let grade = 2;
         let gradeClass = 'grade-2';
 
-        if (isWin) {
-            resultMessage.textContent = "Tabriklaymiz! Topshiriqni bajardingiz.";
-            resultMessage.style.color = "#2e7d32";
-            
-            if (totalDrags >= 24 && totalDrags <= 28) {
-                grade = 5;
-                gradeClass = 'grade-5';
-            } else if (totalDrags >= 29 && totalDrags <= 32) {
-                grade = 4;
-                gradeClass = 'grade-4';
-            } else if (totalDrags >= 33 && totalDrags <= 40) {
-                grade = 3;
-                gradeClass = 'grade-3';
-            } else {
-                grade = 2;
-                gradeClass = 'grade-2';
-            }
+        if (totalDrags >= 24 && totalDrags <= 27) {
+            grade = 5;
+            gradeClass = 'grade-5';
+        } else if (totalDrags >= 28 && totalDrags <= 32) {
+            grade = 4;
+            gradeClass = 'grade-4';
+        } else if (totalDrags >= 33 && totalDrags <= 40) {
+            grade = 3;
+            gradeClass = 'grade-3';
         } else {
-            resultMessage.textContent = "Vaqt tugadi! Ulgurolmadingiz.";
-            resultMessage.style.color = "#c62828";
             grade = 2;
             gradeClass = 'grade-2';
-            
-            draggables.forEach(d => d.setAttribute('draggable', 'false'));
         }
 
-        resultStats.textContent = `Siz ${totalDrags} harakat amalga oshirdingiz`;
-        gradeDisplay.textContent = `Baho: ${grade}`;
+        resultStats.textContent = `Вы нашли все соответствия за ${totalDrags} перетаскиваний.`;
+        gradeDisplay.textContent = `Оценка: ${grade}`;
         gradeDisplay.className = `grade-box ${gradeClass}`;
         resultScreen.style.display = 'flex';
     }
 
     function resetGame() {
-        stopTimer();
         totalDrags = 0;
         correctAnswers = 0;
-        gameStarted = false;
-        timeLeft = timeLimit;
-        
         counterDisplay.textContent = '0';
-        timerDisplay.textContent = formatTime(timeLeft);
-        timerContainer.className = '';
         resultScreen.style.display = 'none';
 
         dropzones.forEach(dropzone => {
@@ -770,7 +428,6 @@
 
         draggables.forEach(draggable => {
             draggable.style.visibility = 'visible';
-            draggable.setAttribute('draggable', 'true');
         });
     }
 
