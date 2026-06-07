@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <title>Anatomik trenajor</title>
     <style>
+	    * {
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: none;
+        }
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f2f5;
@@ -572,217 +577,51 @@
 </main>
 
 <script>
-    // СКРИПТ ДЛЯ ИНТЕРАКТИВНОГО АККОРДЕОН-МЕНЮ
+    // 1. Скрипт для меню (ваш старый)
     const menuTriggers = document.querySelectorAll('.menu-trigger');
-    
     menuTriggers.forEach(trigger => {
         trigger.addEventListener('click', () => {
-            const currentItem = trigger.parentElement;
-            const isOpen = currentItem.classList.contains('open');
-            
-            // Закрываем все открытые разделы меню перед открытием нового
-            document.querySelectorAll('.sidebar-item').forEach(item => {
-                item.classList.remove('open');
-                item.classList.remove('active');
-            });
-            
-            // Если текущий раздел не был открыт, открываем его
-            if (!isOpen) {
-                currentItem.classList.add('open');
-                currentItem.classList.add('active');
-            }
+            trigger.parentElement.classList.toggle('open');
         });
     });
 
-    // ИГРОВАЯ ЛОГИКА ТРЕНАЖЕРА (DRAG AND DROP)
-    const draggables = document.querySelectorAll('.draggable');
-    const dropzones = document.querySelectorAll('.dropzone');
-    const resetButton = document.getElementById('reset-button');
-    const overlayResetButton = document.getElementById('overlay-reset-button');
-    const counterDisplay = document.getElementById('counter-display');
-    const timerDisplay = document.getElementById('timer-display');
-    const timerContainer = document.getElementById('timer-container');
-    const resultScreen = document.getElementById('result-screen');
-    const resultMessage = document.getElementById('result-message');
-    const resultStats = document.getElementById('result-stats');
-    const gradeDisplay = document.getElementById('grade-display');
-    
-    const soundSuccess = document.getElementById('sound-success');
-    const soundError = document.getElementById('sound-error');
+    // 2. НОВАЯ ЛОГИКА ДЛЯ TELEGRAM (вместо старой drag-and-drop)
+    let activeElement = null;
+    let offsetX = 0, offsetY = 0;
 
-    let totalDrags = 0;      
-    let correctAnswers = 0; 
-    
-    const timeLimit = 180; 
-    let timeLeft = timeLimit;
-    let timerInterval = null;
-    let gameStarted = false;
-
-    function formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-
-    timerDisplay.textContent = formatTime(timeLeft);
-
-    function startTimer() {
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            timerDisplay.textContent = formatTime(timeLeft);
-
-            if (timeLeft <= 15) {
-                timerContainer.classList.add('timer-warning');
-            }
-
-            if (timeLeft <= 0) {
-                stopTimer();
-                endGame(false);
-            }
-        }, 1000);
-    }
-
-    function stopTimer() {
-        clearInterval(timerInterval);
-    }
-
-    draggables.forEach(draggable => {
-        draggable.addEventListener('dragstart', (e) => {
-            if (!gameStarted) {
-                gameStarted = true;
-                startTimer();
-            }
-            draggable.classList.add('dragging');
-            e.dataTransfer.setData('text/plain', draggable.id);
-        });
-
-        draggable.addEventListener('dragend', () => {
-            draggable.classList.remove('dragging');
-        });
-    });
-
-    dropzones.forEach(dropzone => {
-        dropzone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-        });
-
-        dropzone.addEventListener('dragenter', () => {
-            dropzone.classList.add('drag-over');
-        });
-
-        dropzone.addEventListener('dragleave', () => {
-            dropzone.classList.remove('drag-over');
-        });
-
-        dropzone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropzone.classList.remove('drag-over');
-
-            if (timeLeft <= 0) return;
-
-            const draggedId = e.dataTransfer.getData('text/plain');
-            const draggedElement = document.getElementById(draggedId);
-            
-            const correctLat = dropzone.getAttribute('data-correct-lat');
-            const correctRus = dropzone.getAttribute('data-correct-rus');
-
-            if (draggedElement) {
-                totalDrags++;
-                counterDisplay.textContent = totalDrags;
-
-                if (draggedId === correctLat || draggedId === correctRus) {
-                    dropzone.textContent = draggedElement.textContent;
-                    dropzone.className = 'dropzone correct';
-                    draggedElement.style.visibility = 'hidden'; 
-                    
-                    correctAnswers++;
-                    
-                    soundSuccess.currentTime = 0;
-                    soundSuccess.play().catch(err => {});
-
-                    if (correctAnswers === 24) {
-                        stopTimer();
-                        setTimeout(() => endGame(true), 600);
-                    }
-                } else {
-                    const oldText = dropzone.textContent;
-                    dropzone.textContent = draggedElement.textContent;
-                    dropzone.className = 'dropzone incorrect';
-                    
-                    soundError.currentTime = 0;
-                    soundError.play().catch(err => {});
-
-                    setTimeout(() => {
-                        dropzone.className = oldText === '' ? 'dropzone' : 'dropzone correct';
-                        dropzone.textContent = oldText;
-                    }, 1200);
-                }
-            }
-        });
-    });
-
-    function endGame(isWin) {
-        let grade = 2;
-        let gradeClass = 'grade-2';
-
-        if (isWin) {
-            resultMessage.textContent = "Tabriklaymiz! Topshiriqni bajardingiz.";
-            resultMessage.style.color = "#2e7d32";
-            
-            if (totalDrags >= 24 && totalDrags <= 28) {
-                grade = 5;
-                gradeClass = 'grade-5';
-            } else if (totalDrags >= 29 && totalDrags <= 32) {
-                grade = 4;
-                gradeClass = 'grade-4';
-            } else if (totalDrags >= 33 && totalDrags <= 40) {
-                grade = 3;
-                gradeClass = 'grade-3';
-            } else {
-                grade = 2;
-                gradeClass = 'grade-2';
-            }
-        } else {
-            resultMessage.textContent = "Vaqt tugadi! Ulgurolmadingiz.";
-            resultMessage.style.color = "#c62828";
-            grade = 2;
-            gradeClass = 'grade-2';
-            
-            draggables.forEach(d => d.setAttribute('draggable', 'false'));
+    document.addEventListener('touchstart', (e) => {
+        if (e.target.classList.contains('draggable')) {
+            activeElement = e.target;
+            const rect = activeElement.getBoundingClientRect();
+            offsetX = e.touches[0].clientX - rect.left;
+            offsetY = e.touches[0].clientY - rect.top;
+            activeElement.style.position = 'fixed';
+            activeElement.style.zIndex = '1000';
         }
+    }, {passive: false});
 
-        resultStats.textContent = `Siz ${totalDrags} harakat amalga oshirdingiz`;
-        gradeDisplay.textContent = `Baho: ${grade}`;
-        gradeDisplay.className = `grade-box ${gradeClass}`;
-        resultScreen.style.display = 'flex';
-    }
+    document.addEventListener('touchmove', (e) => {
+        if (activeElement) {
+            e.preventDefault();
+            activeElement.style.left = (e.touches[0].clientX - offsetX) + 'px';
+            activeElement.style.top = (e.touches[0].clientY - offsetY) + 'px';
+        }
+    }, {passive: false});
 
-    function resetGame() {
-        stopTimer();
-        totalDrags = 0;
-        correctAnswers = 0;
-        gameStarted = false;
-        timeLeft = timeLimit;
-        
-        counterDisplay.textContent = '0';
-        timerDisplay.textContent = formatTime(timeLeft);
-        timerContainer.className = '';
-        resultScreen.style.display = 'none';
-
-        dropzones.forEach(dropzone => {
-            dropzone.className = 'dropzone';
-            dropzone.textContent = '';
-        });
-
-        draggables.forEach(draggable => {
-            draggable.style.visibility = 'visible';
-            draggable.setAttribute('draggable', 'true');
-        });
-    }
-
-    resetButton.addEventListener('click', resetGame);
-    overlayResetButton.addEventListener('click', resetGame);
+    document.addEventListener('touchend', (e) => {
+        if (activeElement) {
+            const touch = e.changedTouches[0];
+            const dropzone = document.elementFromPoint(touch.clientX, touch.clientY).closest('.dropzone');
+            
+            if (dropzone && (dropzone.dataset.correctLat === activeElement.id || dropzone.dataset.correctRus === activeElement.id)) {
+                dropzone.textContent = activeElement.textContent;
+                dropzone.classList.add('correct');
+                activeElement.style.display = 'none';
+            }
+            activeElement.style.position = 'static';
+            activeElement = null;
+        }
+    }, {passive: false});
 </script>
-
 </body>
 </html>
