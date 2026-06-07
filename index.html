@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0", charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes", charset="UTF-8">
     <title>Anatomik trenajor</title>
     <style>
         body {
@@ -13,13 +13,10 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            /* Отключаем выделение текста, системные меню и лупу на корню */
             user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none; 
         }
 
-        /* ОСНОВНОЙ КОНТЕНТ СТРАНИЦЫ */
+        /* ОСНОВНОЙ КОНТЕНТ СТРАНИЦЫ (Теперь занимает весь экран) */
         .main-content {
             flex-grow: 1;
             display: flex;
@@ -30,6 +27,7 @@
             box-sizing: border-box;
         }
 
+        /* Стиль для верхнего поля темы */
         .game-title {
             font-size: 20px;
             font-weight: bold;
@@ -40,6 +38,7 @@
             letter-spacing: 1px;
         }
 
+        /* Информационная панель */
         .info-panel {
             background-color: #f8f9fa;
             border: 1px solid #ddd;
@@ -82,6 +81,7 @@
             position: relative;
         }
 
+        /* Контейнер картинки */
         .image-wrapper {
             position: relative;
             width: 500px;  
@@ -111,6 +111,11 @@
             text-align: center;
             box-sizing: border-box;
             transition: all 0.2s ease;
+            pointer-events: none; 
+        }
+
+        .image-wrapper .dropzone {
+            pointer-events: auto;
         }
 
         .dropzone.drag-over {
@@ -130,6 +135,7 @@
             color: #c62828;
         }
 
+        /* Правая колонка */
         .right-side {
             display: flex;
             flex-direction: column;
@@ -165,16 +171,11 @@
             text-align: center;
             cursor: grab;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.1s;
             box-sizing: border-box;
             display: flex;
             align-items: center;
             justify-content: center;
-            
-            /* Важно для iOS мобилок: отключаем реакцию на долгое нажатие */
-            -webkit-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: none;
-            touch-action: none; /* Запрещает браузеру скроллить экран, пока мы тащим карточку */
         }
 
         .draggable.latin {
@@ -195,11 +196,8 @@
             cursor: grabbing;
         }
 
-        /* Стиль для элемента во время мобильного тача */
         .draggable.dragging {
-            opacity: 0.7;
-            transform: scale(1.05);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            opacity: 0.4;
         }
         
         .timer-warning {
@@ -264,10 +262,12 @@
 </head>
 <body>
 
+<!-- ОСТАЛСЯ ТОЛЬКО ОСНОВНОЙ КОНТЕНТ (МЕНЮ УДАЛЕНО) -->
 <main class="main-content">
 
     <div class="game-title">Spinal soha tashqi mo'ljallari</div>
 
+    <!-- ИНФОРМАЦИОННАЯ ПАНЕЛЬ -->
     <div class="info-panel">
         <div class="info-stats">
             <div>Harakatlar soni: <span id="counter-display">0</span></div>
@@ -372,6 +372,7 @@
 </main>
 
 <script>
+    // ИГРОВАЯ ЛОГИКА ТРЕНАЖЕРА (DRAG AND DROP)
     const draggables = document.querySelectorAll('.draggable');
     const dropzones = document.querySelectorAll('.dropzone');
     const resetButton = document.getElementById('reset-button');
@@ -395,11 +396,6 @@
     let timerInterval = null;
     let gameStarted = false;
 
-    // Переменные для поддержки Touch-событий на iOS
-    let activeDraggedElement = null;
-    let initialX = 0;
-    let initialY = 0;
-
     function formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -409,7 +405,6 @@
     timerDisplay.textContent = formatTime(timeLeft);
 
     function startTimer() {
-        if (timerInterval) return;
         timerInterval = setInterval(() => {
             timeLeft--;
             timerDisplay.textContent = formatTime(timeLeft);
@@ -427,10 +422,8 @@
 
     function stopTimer() {
         clearInterval(timerInterval);
-        timerInterval = null;
     }
 
-    // --- КЛАССИЧЕСКИЙ MOUSE DRAG AND DROP (Для ПК) ---
     draggables.forEach(draggable => {
         draggable.addEventListener('dragstart', (e) => {
             if (!gameStarted) {
@@ -447,130 +440,64 @@
     });
 
     dropzones.forEach(dropzone => {
-        dropzone.addEventListener('dragover', (e) => { e.preventDefault(); });
-        dropzone.addEventListener('dragenter', () => { dropzone.classList.add('drag-over'); });
-        dropzone.addEventListener('dragleave', () => { dropzone.classList.remove('drag-over'); });
-        
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+
+        dropzone.addEventListener('dragenter', () => {
+            dropzone.classList.add('drag-over');
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('drag-over');
+        });
+
         dropzone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropzone.classList.remove('drag-over');
+
             if (timeLeft <= 0) return;
 
-            const draggedId = e.dataTransfer.setData ? e.dataTransfer.getData('text/plain') : null;
-            if (draggedId) {
-                handleElementDrop(document.getElementById(draggedId), dropzone);
+            const draggedId = e.dataTransfer.getData('text/plain');
+            const draggedElement = document.getElementById(draggedId);
+            
+            const correctLat = dropzone.getAttribute('data-correct-lat');
+            const correctRus = dropzone.getAttribute('data-correct-rus');
+
+            if (draggedElement) {
+                totalDrags++;
+                counterDisplay.textContent = totalDrags;
+
+                if (draggedId === correctLat || draggedId === correctRus) {
+                    dropzone.textContent = draggedElement.textContent;
+                    dropzone.className = 'dropzone correct';
+                    draggedElement.style.visibility = 'hidden'; 
+                    
+                    correctAnswers++;
+                    
+                    soundSuccess.currentTime = 0;
+                    soundSuccess.play().catch(err => {});
+
+                    if (correctAnswers === 24) {
+                        stopTimer();
+                        setTimeout(() => endGame(true), 600);
+                    }
+                } else {
+                    const oldText = dropzone.textContent;
+                    dropzone.textContent = draggedElement.textContent;
+                    dropzone.className = 'dropzone incorrect';
+                    
+                    soundError.currentTime = 0;
+                    soundError.play().catch(err => {});
+
+                    setTimeout(() => {
+                        dropzone.className = oldText === '' ? 'dropzone' : 'dropzone correct';
+                        dropzone.textContent = oldText;
+                    }, 1200);
+                }
             }
         });
     });
-
-
-    // --- МОБИЛЬНЫЙ TOUCH DRAG AND DROP (Для iPhone / Telegram) ---
-    draggables.forEach(draggable => {
-        draggable.addEventListener('touchstart', (e) => {
-            if (draggable.getAttribute('draggable') === 'false') return;
-            
-            // Предотвращаем появление лупы и выделение текста средствами iOS
-            e.preventDefault(); 
-            
-            if (!gameStarted) {
-                gameStarted = true;
-                startTimer();
-            }
-
-            activeDraggedElement = draggable;
-            draggable.classList.add('dragging');
-
-            // Запоминаем стартовую позицию пальца
-            const touch = e.touches[0];
-            initialX = touch.clientX;
-            initialY = touch.clientY;
-        }, { passive: false });
-
-        draggable.addEventListener('touchmove', (e) => {
-            if (!activeDraggedElement) return;
-            e.preventDefault(); // Запрещаем скролл экрана во время перетаскивания
-
-            const touch = e.touches[0];
-            // Двигаем элемент вслед за пальцем
-            const deltaX = touch.clientX - initialX;
-            const deltaY = touch.clientY - initialY;
-
-            activeDraggedElement.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(1.05)`;
-            activeDraggedElement.style.zIndex = "9999";
-
-            // Подсвечиваем зону, над которой сейчас палец
-            const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
-            const currentDropzone = elementUnderTouch ? elementUnderTouch.closest('.dropzone') : null;
-
-            dropzones.forEach(zone => zone.classList.remove('drag-over'));
-            if (currentDropzone && !currentDropzone.classList.contains('correct')) {
-                currentDropzone.classList.add('drag-over');
-            }
-        }, { passive: false });
-
-        draggable.addEventListener('touchend', (e) => {
-            if (!activeDraggedElement) return;
-            e.preventDefault();
-
-            activeDraggedElement.classList.remove('dragging');
-            activeDraggedElement.style.transform = '';
-            activeDraggedElement.style.zIndex = activeDraggedElement.classList.contains('latin') ? "3" : "2";
-
-            const touch = e.changedTouches[0];
-            // Находим элемент, над которым отпустили палец
-            const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
-            const targetDropzone = elementUnderTouch ? elementUnderTouch.closest('.dropzone') : null;
-
-            dropzones.forEach(zone => zone.classList.remove('drag-over'));
-
-            if (targetDropzone && timeLeft > 0) {
-                handleElementDrop(activeDraggedElement, targetDropzone);
-            }
-
-            activeDraggedElement = null;
-        }, { passive: false });
-    });
-
-
-    // --- ОБЩАЯ ФУНКЦИЯ ПРОВЕРКИ СОВПАДЕНИЯ (Для ПК и Мобильных) ---
-    function handleElementDrop(draggedElement, dropzone) {
-        if (!draggedElement || dropzone.classList.contains('correct')) return;
-
-        const draggedId = draggedElement.id;
-        const correctLat = dropzone.getAttribute('data-correct-lat');
-        const correctRus = dropzone.getAttribute('data-correct-rus');
-
-        totalDrags++;
-        counterDisplay.textContent = totalDrags;
-
-        if (draggedId === correctLat || draggedId === correctRus) {
-            dropzone.textContent = draggedElement.textContent;
-            dropzone.className = 'dropzone correct';
-            draggedElement.style.visibility = 'hidden'; 
-            
-            correctAnswers++;
-            
-            soundSuccess.currentTime = 0;
-            soundSuccess.play().catch(err => {});
-
-            if (correctAnswers === 24) {
-                stopTimer();
-                setTimeout(() => endGame(true), 600);
-            }
-        } else {
-            const oldText = dropzone.textContent;
-            dropzone.textContent = draggedElement.textContent;
-            dropzone.className = 'dropzone incorrect';
-            
-            soundError.currentTime = 0;
-            soundError.play().catch(err => {});
-
-            setTimeout(() => {
-                dropzone.className = oldText === '' ? 'dropzone' : 'dropzone correct';
-                dropzone.textContent = oldText;
-            }, 1200);
-        }
-    }
 
     function endGame(isWin) {
         let grade = 2;
@@ -580,10 +507,19 @@
             resultMessage.textContent = "Tabriklaymiz! Topshiriqni bajardingiz.";
             resultMessage.style.color = "#2e7d32";
             
-            if (totalDrags >= 24 && totalDrags <= 28) { grade = 5; gradeClass = 'grade-5'; }
-            else if (totalDrags >= 29 && totalDrags <= 32) { grade = 4; gradeClass = 'grade-4'; }
-            else if (totalDrags >= 33 && totalDrags <= 40) { grade = 3; gradeClass = 'grade-3'; }
-            else { grade = 2; gradeClass = 'grade-2'; }
+            if (totalDrags >= 24 && totalDrags <= 28) {
+                grade = 5;
+                gradeClass = 'grade-5';
+            } else if (totalDrags >= 29 && totalDrags <= 32) {
+                grade = 4;
+                gradeClass = 'grade-4';
+            } else if (totalDrags >= 33 && totalDrags <= 40) {
+                grade = 3;
+                gradeClass = 'grade-3';
+            } else {
+                grade = 2;
+                gradeClass = 'grade-2';
+            }
         } else {
             resultMessage.textContent = "Vaqt tugadi! Ulgurolmadingiz.";
             resultMessage.style.color = "#c62828";
@@ -624,7 +560,7 @@
 
     resetButton.addEventListener('click', resetGame);
     overlayResetButton.addEventListener('click', resetGame);
-    document.addEventListener('touchstart', function (event) {
+document.addEventListener('touchstart', function (event) {
     if (event.touches.length > 1) {
         event.preventDefault(); // Запрещаем мультитач-зум двумя пальцами
     }
