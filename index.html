@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes", charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0", charset="UTF-8">
     <title>Anatomik trenajor</title>
     <style>
         body {
@@ -14,9 +14,11 @@
             padding: 0;
             box-sizing: border-box;
             user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none; 
         }
 
-        /* ОСНОВНОЙ КОНТЕНТ СТРАНИЦЫ (Теперь занимает весь экран) */
+        /* ОСНОВНОЙ КОНТЕНТ СТРАНИЦЫ */
         .main-content {
             flex-grow: 1;
             display: flex;
@@ -27,7 +29,6 @@
             box-sizing: border-box;
         }
 
-        /* Стиль для верхнего поля темы */
         .game-title {
             font-size: 20px;
             font-weight: bold;
@@ -38,7 +39,6 @@
             letter-spacing: 1px;
         }
 
-        /* Информационная панель */
         .info-panel {
             background-color: #f8f9fa;
             border: 1px solid #ddd;
@@ -81,7 +81,6 @@
             position: relative;
         }
 
-        /* Контейнер картинки */
         .image-wrapper {
             position: relative;
             width: 500px;  
@@ -111,10 +110,6 @@
             text-align: center;
             box-sizing: border-box;
             transition: all 0.2s ease;
-            pointer-events: none; 
-        }
-
-        .image-wrapper .dropzone {
             pointer-events: auto;
         }
 
@@ -135,7 +130,6 @@
             color: #c62828;
         }
 
-        /* Правая колонка */
         .right-side {
             display: flex;
             flex-direction: column;
@@ -171,11 +165,11 @@
             text-align: center;
             cursor: grab;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: transform 0.1s;
             box-sizing: border-box;
             display: flex;
             align-items: center;
             justify-content: center;
+            touch-action: none; /* Отключает стандартный скролл на элементе */
         }
 
         .draggable.latin {
@@ -197,7 +191,8 @@
         }
 
         .draggable.dragging {
-            opacity: 0.4;
+            opacity: 0.8;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
         }
         
         .timer-warning {
@@ -262,12 +257,10 @@
 </head>
 <body>
 
-<!-- ОСТАЛСЯ ТОЛЬКО ОСНОВНОЙ КОНТЕНТ (МЕНЮ УДАЛЕНО) -->
 <main class="main-content">
 
     <div class="game-title">Spinal soha tashqi mo'ljallari</div>
 
-    <!-- ИНФОРМАЦИОННАЯ ПАНЕЛЬ -->
     <div class="info-panel">
         <div class="info-stats">
             <div>Harakatlar soni: <span id="counter-display">0</span></div>
@@ -372,7 +365,6 @@
 </main>
 
 <script>
-    // ИГРОВАЯ ЛОГИКА ТРЕНАЖЕРА (DRAG AND DROP)
     const draggables = document.querySelectorAll('.draggable');
     const dropzones = document.querySelectorAll('.dropzone');
     const resetButton = document.getElementById('reset-button');
@@ -396,7 +388,7 @@
     let timerInterval = null;
     let gameStarted = false;
 
-    // ПЕРЕМЕННЫЕ ДЛЯ МОБИЛЬНОЙ ВЕРСИИ
+    // Переменные для тача и автоскролла
     let activeDraggedElement = null;
     let startX = 0;
     let startY = 0;
@@ -433,7 +425,7 @@
         timerInterval = null;
     }
 
-    // --- 1. КЛАССИЧЕСКИЙ DRAG AND DROP (Для работы на ПК с мышкой) ---
+    // --- ПК ВЕРСИЯ: DRAG AND DROP ---
     draggables.forEach(draggable => {
         draggable.addEventListener('dragstart', (e) => {
             if (!gameStarted) { gameStarted = true; startTimer(); }
@@ -465,7 +457,7 @@
     });
 
 
-    // --- 2. МОБИЛЬНЫЙ TOUCH DRAG AND DROP (Для смартфонов с автоскроллом экрана) ---
+    // --- МОБИЛЬНАЯ ВЕРСИЯ: TOUCH С АВТОСКРОЛЛОМ ---
     draggables.forEach(draggable => {
         draggable.addEventListener('touchstart', (e) => {
             if (draggable.getAttribute('draggable') === 'false') return;
@@ -482,12 +474,16 @@
             startX = touch.clientX - rect.left;
             startY = touch.clientY - rect.top;
 
+            // Стили фиксации элемента на экране
             draggable.style.position = 'fixed';
             draggable.style.width = rect.width + 'px';
             draggable.style.height = rect.height + 'px';
             draggable.style.left = rect.left + 'px';
             draggable.style.top = rect.top + 'px';
             draggable.style.zIndex = "9999";
+            
+            // Пробиваем элемент насквозь для скролла и дропзон под ним
+            draggable.style.pointerEvents = 'none'; 
         }, { passive: false });
 
         draggable.addEventListener('touchmove', (e) => {
@@ -501,16 +497,18 @@
             activeDraggedElement.style.left = x + 'px';
             activeDraggedElement.style.top = y + 'px';
 
-            // Логика автоматического сдвига экрана при приближении пальца к краю
-            const edgeThreshold = 70; 
-            const maxSpeed = 12;      
+            // Логика автоматического сдвига экрана при приближении к левому/правому краю
+            const edgeThreshold = 80; 
+            const maxSpeed = 14;      
             const screenWidth = window.innerWidth;
 
             if (touch.clientX < edgeThreshold) {
+                // Двигаем экран влево
                 scrollSpeed = -maxSpeed * (1 - touch.clientX / edgeThreshold);
                 startAutoScroll();
             } 
             else if (touch.clientX > screenWidth - edgeThreshold) {
+                // Двигаем экран вправо
                 scrollSpeed = maxSpeed * (1 - (screenWidth - touch.clientX) / edgeThreshold);
                 startAutoScroll();
             } 
@@ -541,11 +539,13 @@
 
             dropzones.forEach(zone => zone.classList.remove('drag-over'));
 
+            // Сбрасываем инлайн-стили и возвращаем объект на базу
             activeDraggedElement.style.position = 'absolute';
             activeDraggedElement.style.width = '100%';
             activeDraggedElement.style.height = '100%';
             activeDraggedElement.style.left = '0';
             activeDraggedElement.style.top = '0';
+            activeDraggedElement.style.pointerEvents = 'auto'; 
             activeDraggedElement.style.zIndex = activeDraggedElement.classList.contains('latin') ? "3" : "2";
 
             if (targetDropzone && timeLeft > 0) {
@@ -556,7 +556,7 @@
         }, { passive: false });
     });
 
-    // Функции для поддержки автоскролла
+    // Хелперы автоскролла страницы
     function startAutoScroll() {
         if (scrollInterval) return;
         scrollInterval = setInterval(() => {
@@ -571,8 +571,7 @@
         }
     }
 
-
-    // --- 3. УНИВЕРСАЛЬНАЯ ЛОГИКА ПРОВЕРКИ ОТВЕТА ---
+    // --- УНИВЕРСАЛЬНАЯ ПРОВЕРКА ---
     function handleElementDrop(draggedElement, dropzone) {
         if (!draggedElement || dropzone.classList.contains('correct')) return;
 
@@ -665,7 +664,7 @@
     resetButton.addEventListener('click', resetGame);
     overlayResetButton.addEventListener('click', resetGame);
 
-    // Дополнительная защита от системного масштабирования iOS
+    // Запрет мультитач-масштабирования
     document.addEventListener('touchstart', function (event) {
         if (event.touches.length > 1) event.preventDefault();
     }, { passive: false });
